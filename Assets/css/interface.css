@@ -1,0 +1,583 @@
+.main-container{
+    padding: 10px;
+    z-index: 1;
+    overflow: auto;
+}
+
+
+
+    /* ATTENDANCE */
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+.flex-container1 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 20rem);
+  flex-wrap: nowrap;
+  margin: 20px;
+  justify-content: space-evenly;
+  
+  
+}
+
+.flex-container1 > div {
+  background-color: rgb(255, 255, 255);
+  width: 100%;
+  height: auto;
+  padding: 40px;
+  margin: 20px;
+  box-shadow: 0 19px 38px rgba(156, 156, 156, 0.3), 0 15px 12px rgba(128, 114, 114, 0.22);
+  border-radius: 5px;
+
+}
+.flex-row a{
+  text-decoration: none;
+  color: rgb(0, 0, 0);
+}
+.flex-row i{
+  font-size: 40px;
+  color: rgb(0, 0, 0);
+}
+
+
+            /*=================================================================*/
+            /*||                                                             ||*/
+            /*||                         REQUIRED LABEL                      ||*/
+            /*||                                                             ||*/
+            /*=================================================================*/
+.modal_content_student .form-students .required::after{
+  content: "   *";
+  color: red;
+  font-size: 15px;
+}
+
+            /*=================================================================*/
+            /*||                                                             ||*/
+            /*||                         NAVIGATION BAR                      ||*/
+            /*||                                                             ||*/
+            /*=================================================================*/
+
+
+.nav-search-add {
+
+    width: 70%;
+    list-style-type: none;
+    margin: 30px 0 0 0;
+    padding: 0;
+    overflow: hidden;
+
+  }
+  
+  .nav-search-add li {
+    float: left;
+    margin-left: 20px ;
+  }
+  
+  .nav-search-add li a {
+    display: block;
+    color: white;
+    background-color: #002aff;
+    text-align: center;
+    padding: 14px 26px;
+    text-decoration: none;
+    border-radius: 50px;
+  }
+  .nav-search-add li a:hover:not(.active){
+    background-color: #0d45df;
+    cursor: pointer;
+  }
+  .nav-search-add .li2{
+    float: right;
+    background-color: whitesmoke;
+  }
+  .nav-search-add li input{
+    outline: none;
+    background-color: rgb(250, 244, 244);
+    border: none;
+    padding:14px 20px 17px 20px;
+  }
+
+            /*=================================================================*/
+            /*||                                                             ||*/
+            /*||                     MODAL FOR ADD STUDENT                   ||*/
+            /*||                                                             ||*/
+            /*=================================================================*/
+
+
+.modal_title{
+    padding: 10px;
+
+}
+.modal_add_student, .modal_add_teacher, .modal_add_teacher1, .modal_time, .modal_event{
+  background-color: rgba(243, 232, 232, 0.9);
+  display:flex;
+  align-items:center;
+  position:fixed;
+  opacity:0;
+  pointer-events:none;
+  width:100vw;
+  height:100vh;
+  top:0;
+  left:0;
+}
+
+#modal_add_student.show, #modal_add_teacher.show, #modal_add_teacher1.show, #modal_time.show , #modal_event.show{
+    pointer-events:auto;
+    opacity:1;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+
+}
+
+.modal_content_student, .modal_content_teacher, .modal_content_teacher1, .modal_time_content, .modal_event_content{
+    background: rgb(255, 255, 255);
+    border-radius: 5px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    padding: 10px;
+    color: #333;
+    box-shadow: 0 5px 5px black;
+    transition: transform 0.4s, top 0.4s;
+}
+
+.modal_content_student h3{
+  color: #9f1739;
+  letter-spacing: 5px;
+}
+
+form .half, .form-teachers form .half{
+  display: flex;
+  justify-content: space-between;
+
+}
+
+form .half .item, .form-teachers form .half .item{
+  display: flex;
+  flex-direction: column;
+  margin: 0 10px 5px 0;
+  width: auto;
+}
+
+form label, .form-teachers form label{
+  display: block;
+  text-align: left;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left:10px ;
+}
+form .item img, .form-teachers form .item img{
+    outline: 0;
+    float: left;
+    border-radius: 10%;/* Add a margin to separate the image from the label */
+}
+form .item input, form .item select{
+  text-align: Left;
+  border-radius: 4px;
+  outline: 0;
+  padding: 10px;
+  margin: 5px;
+  display: inline-block;
+  width: 15rem;
+  font-size: 12px;
+  border: 1px solid rgb(165, 161, 161);
+}
+select, .table-responsive .subtext, .puts {
+  text-align: left;
+  border-radius: 4px;
+  outline: 0;
+  padding: 10px;
+  display: inline-block;
+  width: 100%;
+  font-size: 12px;
+  border: 1px solid rgb(165, 161, 161);
+}
+form .full, .form-teachers .full{
+  margin-bottom: 24px;
+}
+.cancel, #btn_cancel_t{
+    margin-top: 5px;
+    margin-left: 10px;
+    float: right;
+    padding: 10px;
+    font-weight: bold;
+    background-color:  rgb(175, 175, 177);
+    border: none;
+    border-radius: 50%;
+    height: 2rem;
+    width: 2rem;
+    cursor: pointer;
+    box-shadow: #150f0f;
+}
+.cancel:hover, #btn_cancel_t:hover{
+  background-color:  rgb(116, 116, 121);
+}
+
+form button{
+    float: right;
+    margin-left: 10px;
+    padding:13px;
+    font-weight: bold;
+    
+
+}
+
+form .item input:focus{
+  background: rgba(255,255,255,0.075);
+}
+
+.table-select {
+  display: inline-block;
+  width: 100%;
+  position: relative;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.table-select select {
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  border: none;
+  background-color: transparent;
+  appearance: none;
+  outline: none;
+  cursor: pointer;
+  font-size: 16px;
+  text-align: left;
+}
+
+.table-select select option {
+  padding: 8px 12px;
+  text-align: left;
+}
+
+          
+            /*=================================================================*/
+            /*||                                                             ||*/
+            /*||                     DESIGN FOR TABLE DISPLAY                ||*/
+            /*||                                                             ||*/
+            /*=================================================================*/
+
+.table-responsive{
+  width: auto;
+  height:auto;
+  margin: 20px;
+  padding: 20px;
+  background: rgb(255, 255, 255);
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.table-container {
+  table-layout: auto;
+  border-collapse: collapse;
+  margin-top: 20px;
+  width: 100%;
+  white-space: nowrap;
+
+  td a {
+    display: inline-block;
+    padding: 0 20px; /* Adjust padding as needed */
+    margin: 0 auto; /* Centers the anchor horizontally */
+    text-align: center;
+  }
+}
+
+.table-container th,
+.table-container td{
+  table-layout: auto;
+  padding: 5px;
+  text-align: left;
+  border-bottom: 1px solid #9c8585;
+}
+.table-container td{
+  font-size: 12px;
+  padding: 10px;
+}
+
+.table-container th {
+  background-color: #150f0f;
+  color: whitesmoke;
+  border-left: 1px solid white;
+  font-size: 12px;
+}
+/* .table-container th:first-child, .table-container1 th:first-child {
+  border-top-left-radius: 20px ;
+}
+.table-container th:last-child, .table-container1 th:last-child {
+  border-top-right-radius: 20px ;
+} */
+.table-container .active-status {
+  background-color: green;
+  font-weight: bold;
+  color: white;
+  z-index: 1;
+  margin: 10px;
+  padding: 10px;
+}
+/* IMAGES IN TABLE */
+.img_tbl{
+  height: 40px;
+  width: 40px;
+  object-fit: cover;
+}
+
+.table-container .lost-status {
+  background-color: red;
+  font-weight: bold;
+  color: white;
+}
+
+.table-container .vacant-status {
+  background-color: blue;
+  font-weight: bold;
+  color: white;
+}
+
+/*=================================================================*/
+/*||                                                             ||*/
+/*||                     SCHOOL INFORMATION                      ||*/
+/*||                                                             ||*/
+/*=================================================================*/
+
+#contact input[type="text"], #contact input[type="email"], #contact input[type="tel"], #contact input[type="url"], #contact textarea, #contact button[type="submit"] { font:400 12px/16px "Open Sans", Helvetica, Arial, sans-serif; }
+#contact {
+  background:#F9F9F9;
+  padding:25px;
+  margin:50px 0;
+}
+
+#contact h3 {
+  color: #F96;
+  display: block;
+  font-size: 30px;
+  font-weight: 400;
+}
+
+#contact h4 {
+  margin:5px 0 15px;
+  display:block;
+  font-size:13px;
+}
+
+fieldset {
+  border: medium none !important;
+  margin: 0 0 10px;
+  min-width: 100%;
+  padding: 0;
+  width: 100%;
+}
+
+#contact input[type="text"], #contact input[type="email"], #contact input[type="tel"], #contact input[type="url"], #contact textarea {
+  width:100%;
+  border:1px solid #CCC;
+  background:#FFF;
+  margin:0 0 5px;
+  padding:10px;
+}
+
+#contact input[type="text"]:hover, #contact input[type="email"]:hover, #contact input[type="tel"]:hover, #contact input[type="url"]:hover, #contact textarea:hover {
+  -webkit-transition:border-color 0.3s ease-in-out;
+  -moz-transition:border-color 0.3s ease-in-out;
+  transition:border-color 0.3s ease-in-out;
+  border:1px solid #AAA;
+}
+
+#contact textarea {
+  height:100px;
+  max-width:100%;
+  resize:none;
+}
+
+#contact button[type="submit"] {
+  cursor:pointer;
+  width:100%;
+  border:none;
+  background:#0CF;
+  color:#FFF;
+  margin:0 0 5px;
+  padding:10px;
+  font-size:15px;
+}
+
+#contact button[type="submit"]:hover {
+  background:#09C;
+  -webkit-transition:background 0.3s ease-in-out;
+  -moz-transition:background 0.3s ease-in-out;
+  transition:background-color 0.3s ease-in-out;
+}
+
+#contact button[type="submit"]:active { box-shadow:inset 0 1px 3px rgba(0, 0, 0, 0.5); }
+
+#contact input:focus, #contact textarea:focus {
+  outline:0;
+  border:1px solid #999;
+}
+::-webkit-input-placeholder {
+ color:#888;
+}
+:-moz-placeholder {
+ color:#888;
+}
+::-moz-placeholder {
+ color:#888;
+}
+:-ms-input-placeholder {
+ color:#888;
+}
+.table-tr {
+    width: 50%;
+    margin: 20px auto;
+    border-collapse: collapse;
+}
+
+.table-tr th, .table-tr td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.table-trth {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.table-tr td input {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+.table-tr .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    outline: none;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+}
+
+.table-tr .btn-primary {
+    background-color: #007bff;
+}
+
+.table-tr .btn-success {
+    background-color: #28a745;
+}
+
+.table-tr .btn:hover {
+    background-color: #0056b3;
+}
+
+.table-tr .fa-user-plus {
+    margin-right: 5px;
+}
+
+.table-tr .glyphicon {
+    margin-right: 5px;
+}
+
+
+
+            /*=================================================================*/
+            /*||                                                             ||*/
+            /*||                         UPDATE MODAL                        ||*/
+            /*||                                                             ||*/
+            /*=================================================================*/
+
+
+  .edit-form-container, .edit-form-container1{
+    position: fixed;
+    top:0; left:0;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding:.5rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    transition: all 2s ease;
+    z-index: 2;
+ }
+ 
+ .edit-form-container form, .edit-form-container1 form{
+    border-radius: .5rem;
+    background-color: white;
+    text-align: center;
+    padding:1rem;
+    transition: opacity 0.3s ease;
+    width: auto;
+ }
+ 
+ .edit-form-container form .box,.edit-form-container1 form .box{
+    border-radius: .2rem;
+    margin:.5rem 0;
+    outline:none;
+    color:black;
+    padding:.8rem;
+    text-transform: none;
+    transition: opacity 0.3s ease;
+    width: 100%;
+ }
+ .edit-form-container form .flex-container, .edit-form-container1 form .flex-container{
+    display: flex;
+    justify-content: space-between;
+    text-align: center;
+
+ }
+ .edit-form-container form .flex-container .cont1, .edit-form-container1 form .flex-container .cont1{
+    margin-right: 20px;
+    text-align:center;
+    outline:none;
+ }
+ .edit-form-container form .flex-container .cont2, .edit-form-container1 form .flex-container .cont2{
+  text-align:center;
+  outline:none;
+}
+.edit-form-container form input[type="text"], .edit-form-container form input[type="date"], .edit-form-container form input[type="email"],
+.edit-form-container1 form input[type="text"] .edit-form-container form .select, .edit-form-container1 form .select, .edit-form-container form input[type="time"]{
+    background-color: #ffffff;
+    border: none;
+    border: 1px solid rgb(152, 152, 152); /* You have defined border twice here, consider removing one */
+    border-radius: .2rem;
+    margin:.5rem 0;
+    outline:none;
+    color:black;
+    padding:.6rem;
+    text-transform: none;
+    transition: opacity 0.3s ease;
+    width: 100%;
+    text-align: left;
+    
+} 
+
+
+  /*=================================================================*/
+  /*||                                                             ||*/
+  /*||                           PRINT                             ||*/
+  /*||                                                             ||*/
+  /*=================================================================*/
+
+  @media print{
+    body *:not(#result):not(#result *){
+        visibility: hidden;
+    }
+    #result{
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+}
+

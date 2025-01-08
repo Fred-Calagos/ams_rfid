@@ -1,0 +1,6 @@
+             from a-auto-search-attendance.php
+                // <td>
+                //     <a href="edit-books.php?id='.$merged_row['id'].'&name='.$merged_row['fname'].'"> <i class="fas fa-edit edit"></i> </a>
+                //     <a href="delete-book.php?id='.$merged_row['id'].'"> <i class="fas fa-trash delete"></i></a>
+                // </td>
+                

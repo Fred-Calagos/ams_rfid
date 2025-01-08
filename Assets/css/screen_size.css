@@ -1,0 +1,78 @@
+/* Update the rest of your CSS styles accordingly */
+
+/* MEDIA QUERIES */
+@media only screen and (max-width: 800px) {
+    /* For tablets */
+    .flex-container1 {
+        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    }
+    .modal_content_student,
+    .modal_content_teacher,
+    .modal_content_teacher1,
+    .modal_time_content,
+    .modal_event_content {
+        background: rgb(255, 255, 255);
+        border-radius: 5px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        padding: 0 10px;
+        color: #333;
+        box-shadow: 0 5px 5px black;
+        transition: transform 0.4s, top 0.4s;
+    }
+    .scroll{
+        overflow: auto;
+    }
+    .table-container th,
+    .table-container td {
+        font-size: 10px; /* Decrease font size for better fit */
+    }
+
+    .table-container td {
+        padding: 5px; /* Adjust cell padding */
+    }
+}
+
+
+@media only screen and (max-width: 500px) {
+    /* For mobile phones */
+    .flex-container1 {
+        grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    }
+    .scroll{
+        overflow: auto;
+    }
+    .table-container th,
+    .table-container td {
+        font-size: 8px; /* Further decrease font size */
+    }
+
+    .table-container td {
+        padding: 3px; /* Further adjust cell padding */
+    }
+        /* Hide the entire row containing the headers */
+        .table-container th:nth-child(3),
+        .table-container th:nth-child(4),
+        .table-container th:nth-child(5),
+        .table-container th:nth-child(6),
+        .table-container tr:nth-child(2)
+        {
+            display: none;
+        }
+        .scroll{
+            overflow: auto;
+        }
+
+    .table-container td:nth-child(n+3) {
+        display: none; /* Hide some columns to fit smaller screens */
+    }
+        /* Hide all columns except the last child */
+        .table-container th:last-child,
+        .table-container td:last-child{
+            display: block;
+        }
+    
+}

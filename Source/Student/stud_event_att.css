@@ -1,0 +1,139 @@
+/* stud_profile.css */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.dashboard {
+    display: flex;
+}
+h1 {
+    font-size: 50px;
+}
+
+.top {
+    width: 80px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.top i {
+    margin-top: 10px;
+}
+
+.dash-content {
+    flex: 1;
+    padding: 20px;
+}
+
+.title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.title i {
+    margin-right: 10px;
+}
+
+.profile-info {
+    display: flex; /* Added */
+    background-color: #fff;
+    padding: 20px;
+    max-width: 100%;
+    margin: 0 auto;
+    height: 100%;
+}
+
+.left-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.left-section img {
+    width: 350px;
+    height: 350px;
+    border-radius: 50%;
+    margin-bottom: 30px;
+    margin-top: 50px;
+}
+
+.right-section img {
+    width: 100%; /* Adjusted to cover the entire width */
+    height: 100%;
+    object-fit: cover; /* Added to make the image cover */
+}
+
+.right-section {
+    flex: 1;
+}
+
+.profile-info p {
+    margin: 10px 0;
+    font-size: 20px; /* Increased font size */
+}
+
+.sidebar-toggle {
+    cursor: pointer;
+}
+
+/* Ensure the table container is responsive */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Enable smooth scrolling on iOS */
+}
+
+/* Adjust table styles for better readability on smaller screens */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px; /* Add some space below the table */
+}
+
+table th, table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+/* Ensure the table header remains visible during scrolling */
+table thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f2f2f2;
+}
+
+/* Adjust font size for better readability on smaller screens */
+@media screen and (max-width: 768px) {
+    table th, table td {
+        font-size: 14px; /* Decrease font size for smaller screens */
+    }
+}
+
+/* Media Query for smaller screens */
+@media (max-width: 768px) {
+    .dashboard {
+        flex-direction: column;
+    }
+
+    .top {
+        width: 100%;
+    }
+
+    .dash-content {
+        padding: 20px 10px;
+    }
+
+    .profile-info {
+        max-width: 100%;
+    }
+}
+

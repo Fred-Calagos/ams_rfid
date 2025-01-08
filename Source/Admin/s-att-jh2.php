@@ -1,0 +1,1226 @@
+<?php
+include "header.php";
+include("../../Inc/connect.php");
+// Check if the user is logged in
+
+$username = $_SESSION["username"];
+date_default_timezone_set('Asia/Manila');
+
+
+$schoolInfo = mysqli_query($conn, "SELECT * FROM school_profile");
+while($schoolInfoRow = mysqli_fetch_assoc($schoolInfo)){
+    $schoolName         = $schoolInfoRow['name'];
+    $schoolId           = $schoolInfoRow['school_id'];
+    $schoolDistrict     = $schoolInfoRow['district'];
+    $schoolDivision     = $schoolInfoRow['division'];
+    $schoolRegion       = $schoolInfoRow['region'];
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REPORT: GATE ATTENDANCE</title>
+    <script src="../../assets/js/jquery.js" type="text/javascript"></script>
+    <script src="../../assets/js/js-script.js" type="text/javascript"></script>
+    <script src="../../assets/jquery/jquery.min.js"></script>
+</head>
+
+<body>
+    <section class="dashboard">
+        <div class="top">
+            <i class="fas fa-bars sidebar-toggle"></i>
+            <div class="search-box">
+                <i class="uil uil-search"></i>
+            </div>
+        </div><br>
+        <div class="dash-content">
+            <div class="table-responsive">
+            <div class="bread">
+                <ul class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="s-attendance.php"><i class="bx bxs-home"></i></a></li>
+                    <li class="breadcrumb-item active"><a href="s-att-jh.php">Junior High School</a></li>
+                </ul>
+            </div>
+            </div>
+            <div class="table-responsive">
+            <form action="" method="post" name="form1">
+					<table class="table">
+                        <tr>
+                            <td>
+                            <select name="idtl" >
+                                <option value="" selected disabled hidden>Select Subject</option>
+                                <?php
+                                    $res = mysqli_query($conn, "SELECT tl.*, ti.t_rfid AS trfid, tl.id_tl AS idtl, sub.sub_name AS sname, sub.s_id AS sId, CONCAT(adv.t_ln,', ',adv.t_fn,' ',adv.t_mn) AS advName,gr.stud_grade AS grade, hs.hs_name AS hsName FROM teaching_load AS tl
+                                                                        LEFT JOIN subjects AS sub ON tl.s_id = sub.s_id
+                                                                        LEFT JOIN teacher_info AS ti ON tl.t_id = ti.t_id
+                                                                        LEFT JOIN teacher_info AS adv ON tl.adv_id = adv.t_id
+                                                                        LEFT JOIN grade AS gr ON sub.grade_id = gr.grade_id
+                                                                        LEFT JOIN hs_cat AS hs ON gr.hs_id = hs.hs_id
+                                                                        WHERE gr.hs_id = '1'");
+                                    while ($row = mysqli_fetch_array($res)) {
+                                        ?>
+                                        <option value="<?php echo $row['idtl']; ?>"><?php echo $row['sname'] . ' | ' . $row['advName']; ?></option>
+                                        <?php
+                                    }
+                                    ?>
+                            </select><br>
+							</td>
+							<td>
+                            <select name="month" >
+                                <option value="" selected disabled hidden>Select Month</option>
+                                <?php
+                                    $query = mysqli_query($conn, "SELECT * FROM `month` ORDER BY id ASC");
+                                    while ($row = mysqli_fetch_array($query)) {
+                                        ?>
+                                        <option value="<?php echo $row['month_id']; ?>"><?php echo $row['month_name']; ?></option>
+                                        <?php
+                                    }
+                                    ?>
+                            </select><br>
+							</td>
+                            <td>
+                                <select name="year" id="">
+                                <option value="" selected disabled hidden>Select Year</option>
+                                    <option value="2020">2020</option>
+                                    <option value="2021">2021</option>
+                                    <option value="2022">2022</option>
+                                    <option value="2023">2023</option>
+                                    <option value="2024">2024</option>
+                                </select>
+                            </td>
+							<td>
+								 <input type="submit" name="submit2" class="btn btn_create1" value="Submit">
+							</td>
+                            <td>
+                            <button onclick="print_div()" class="btn_edit1"><i class="bi bi-printer"> </i>PRINT</button>
+                            </td>
+						</tr>
+					</table>
+                </form>
+            </div>
+            <div class="table-responsive">
+                <?php
+                if(isset($_POST['submit2'])) {
+                    $selectedTl = $_POST['idtl'];
+                    $selectedMonth = $_POST['month'];
+                    $year           = $_POST['year'];
+                    $firstDayOfMonth = date("Y-$selectedMonth-0");
+                    $totalDaysInMonth = date("t", strtotime($firstDayOfMonth));
+                    // Fetching Students 
+                    $fetchingStudents = mysqli_query($conn, "SELECT 
+                                            student_id,
+                                            advName,
+                                            full_name,
+                                            grName,
+                                            secName,
+                                            syName
+                                        FROM (
+                                            SELECT 
+                                                ag.student_id,
+                                                CONCAT(adv.t_ln, ', ', adv.t_fn, ' ', adv.t_mn) AS advName,
+                                                GROUP_CONCAT(DISTINCT CONCAT(ns.lname, ', ', ns.fname, ' ', ns.mname) ORDER BY ns.lname ASC) AS full_name,
+                                                gr.stud_grade AS grName,
+                                                sc.section_name AS secName,
+                                                sy.sy_name AS syName,
+                                                ns.gender
+                                            FROM 
+                                                attendance_class AS ag
+                                                LEFT JOIN teaching_load AS tl ON ag.id_tl = tl.id_tl
+                                                LEFT JOIN teacher_info AS adv ON tl.adv_id = adv.t_id
+                                                LEFT JOIN teacher AS advId ON adv.t_id = advId.t_id
+                                                LEFT JOIN grade AS gr ON advId.grade = gr.grade_id
+                                                LEFT JOIN section AS sc ON advId.section = sc.section_id
+                                                LEFT JOIN new_students AS ns ON ag.student_id = ns.student_id
+                                                LEFT JOIN school_year AS sy ON ns.sy_enrolled = sy.sy_id
+                                            WHERE 
+                                                MONTH(ag.cl_date) = '$selectedMonth' 
+                                                AND YEAR(ag.cl_date) = '$year' 
+                                                AND ag.id_tl = '$selectedTl'
+                                            GROUP BY 
+                                                ag.student_id, gr.stud_grade, sc.section_name, sy.sy_name, ns.gender
+                                        ) AS subquery
+                                        ORDER BY 
+                                            gender DESC, 
+                                            full_name ASC;
+                                        ;") 
+                                         or die(mysqli_error($conn));
+                    
+                ?>
+                
+                                    <div class="scroll" style="overflow-x:auto;">
+            <div class="printable">
+                    
+            
+                        <!-- JUNIOR HIGH SCHOOL INFORMATION HEADER -->
+
+                <table class="table-container" id="tbl_cont" border="0">
+                <tr>
+                    <td colspan="7"  style="text-align:center;border:none"><img src="../../images/admin/DepEd_circ.png" alt="DepEd Logo" srcset="" height="100" width="100"></td>
+                    <td colspan="20" style="border:none;text-align:center"><h2>School Form 2 (SF2) Daily Attendance Report of Learners</h2></td>
+                    <td colspan="7" style="text-align:center;border:none"><img src="../../images/admin/DepEd_abbr.png" alt="" srcset="" height="100" width="100"></td>
+                </tr>
+                <tr>
+                <td colspan="2" style="border:none;"><label for="">School Name</label></td>
+                    <td  colspan="9">
+                        <input type="text" name="schoolId" class="puts1" id="schoolId" value="<?php echo $schoolName?>" readonly>
+                    </td> 
+                    <td colspan="2" style="text-align:right;border:none"><label for="sy">School ID</label></td>                   
+                    <td colspan="4">
+                        <input type="text" name="sy" class="puts1" id="sy" value="<?php echo $schoolId?>" readonly>
+                    </td>
+                    <td colspan="2" style="border:none;"><label for="">District</label></td>                    
+                    <td colspan="5" >
+                        <input type="text" name="rfidcard" class="puts1" id="rfidcard" value="<?php echo $schoolDistrict?>" readonly>
+                    </td>
+                    <td colspan="3"  style="text-align:right;border:none"><label for="">Division</label></td>                    
+                    <td colspan="6" >
+                        <input type="text" name="rfidcard" class="puts1" id="rfidcard" value="<?php echo $schoolDivision?>" readonly>
+                    </td>
+                    <td  style="text-align:right;border:none"><label for="">Region</label></td>                    
+                    <td >
+                        <input type="text" name="rfidcard" class="puts1" id="rfidcard" value="<?php echo $schoolRegion?>" readonly>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="35" style="border:none"></td>
+                </tr>
+
+
+
+
+
+                <br>
+                </tr>
+                <?php
+$absentCount = 0;
+$presentCount = 0;
+$cuttingCount = 0;
+$lateCount = 0;
+$absentStudentCount = 0;
+$presentStudentCount = 0;
+$cuttingStudentCount = 0;
+$lateStudentCount = 0;
+
+// Fetch school year, grade, section
+$student = mysqli_fetch_array($fetchingStudents);
+
+if ($student) {
+    $syName = $student['syName'];
+    $grName = $student['grName'];
+    $secName = $student['secName'];
+    
+    ?>
+    <!-- SECOND ROW -->
+    <tr>
+        <td colspan="2" style="border:none;"><label for="">School Year</label></td>
+        <td colspan="8">
+            <input type="text" name="sy" class="puts1" id="sy" value="<?php echo $syName?>" readonly>
+        </td>
+        <td colspan="4" style="text-align:right;border:none"><label for="">Grade Level</label></td>
+        <td colspan="5">
+            <input type="text" name="gl" class="puts1" id="gl" value="<?php echo $grName;?>" readonly>
+        </td>  
+        <td colspan="3" style="text-align:right;border:none;"><label for="">Section</label></td>
+        <td colspan="10">
+            <input type="text" name="sec" class="puts1" id="sec" value="<?php echo $secName;?>" readonly>
+        </td>
+        <td style="text-align:right;border:none;"><label for="">Month of</label></td>
+        <?php
+
+            // Fetch month name based on the month ID
+            $fetchMonthQuery = mysqli_query($conn, "SELECT month_name FROM month WHERE month_id = '$selectedMonth'");
+            $monthData = mysqli_fetch_assoc($fetchMonthQuery);
+            $monthName = $monthData['month_name'];
+
+            // Display the month name in the input field
+            ?>
+            <td colspan="8">
+                <input type="text" name="mon" class="puts1" id="mon" value="<?php echo $monthName; ?>" readonly>
+            </td>
+
+    </tr>
+    <tr>
+            <td colspan="35" style="border:none"></td>
+    </tr>
+    <tr>
+        <!-- iteration of the date of the month -->
+        <td rowspan="2">No.</td>
+        <td rowspan="2" >Students Names</td>
+            <?php
+            for ($j = 1; $j <= $totalDaysInMonth; $j++) {
+                $currentDate = date('Y-m-d', strtotime("$firstDayOfMonth + " . ($j - 1) . " days"));
+                $dayOfWeek = date('N', strtotime($currentDate));
+                
+                if ($dayOfWeek <= 5) { // Only include weekdays (Monday to Friday)
+                    echo "<td>$j</td>";
+                }
+            }
+            ?>
+        <td colspan="4">
+            <h5>Total for the Month</h5>
+        </td >
+        <td rowspan="2" colspan="10" style="text-align:center">
+        <p>REMARKS (If NLS, state reason, please refer to legend number 2.</p>
+        <p>If TRANSFERRED IN/OUT, write the name of School.)</p>
+        </td>
+    </tr>
+    <tr>
+    <?php
+// Iteration of the days of the month
+for ($j = 1; $j <= $totalDaysInMonth; $j++) {
+    $currentDate = date('Y-m-d', strtotime("$firstDayOfMonth + " . ($j - 1) . " days"));
+    $dayAbbreviated = date("D", strtotime($currentDate)); // Get abbreviated day name
+
+    if (date('N', strtotime($currentDate)) > 5) {
+        // Skip Saturday and Sunday
+        continue;
+    }
+
+    // Map abbreviated day names
+    switch ($dayAbbreviated) {
+        case 'Mon':
+            $dayAbbreviated = 'M';
+            break;
+        case 'Tue':
+            $dayAbbreviated = 'T';
+            break;
+        case 'Wed':
+            $dayAbbreviated = 'W';
+            break;
+        case 'Thu':
+            $dayAbbreviated = 'Th';
+            break;
+        case 'Fri':
+            $dayAbbreviated = 'F';
+            break;
+        default:
+            // Handle any other cases here
+            break;
+    }
+
+    // Display the current day of the month with the abbreviated weekday
+    echo "<td>$dayAbbreviated</td>";
+}
+?>
+        <td>A</td>
+        <td>P</td>
+        <td>C</td>
+        <td>L</td>
+    </tr>
+    <?php
+
+    // Fetch male students first
+    $fetchingMaleStudents = mysqli_query($conn, "SELECT * FROM new_students WHERE gender = 'Male' ORDER BY lname ASC") or die(mysqli_error($conn));
+    // Initialize arrays to hold daily totals
+    $dailyPresentTotal = array_fill(1, $totalDaysInMonth, 0);
+    $dailyAbsentTotal = array_fill(1, $totalDaysInMonth, 0);
+    $dailyCuttingTotal = array_fill(1, $totalDaysInMonth, 0);
+    $dailyLateTotal = array_fill(1, $totalDaysInMonth, 0);
+
+    $n = 0;
+
+    // Loop through male students
+    while ($student = mysqli_fetch_array($fetchingMaleStudents)) {
+        $student_id = $student['student_id'];
+        $sname = $student['fname'] . ' ' . $student['lname'];
+
+        // Initialize counts for each student
+        $absentStudentCount = 0;
+        $presentStudentCount = 0;
+        $cuttingStudentCount = 0;
+        $lateStudentCount = 0;
+
+        $n++;
+        
+        echo "<tr>";
+        echo "<td>$n</td>";
+        echo "<td>$sname</td>";
+
+        for ($j = 1; $j <= $totalDaysInMonth; $j++) {
+            $dayFormatted = sprintf('%02d', $j);
+            $dateOfAttendance = date("$year-$selectedMonth-$dayFormatted");
+            $currentDay = date('N', strtotime($dateOfAttendance));
+        
+            if ($currentDay > 5) {
+                // Skip weekends entirely
+                continue;
+            }
+        
+            // Query the attendance for the current date
+            $fetchingStudentsAttendance = mysqli_query($conn, "SELECT * FROM attendance_class WHERE student_id = '$student_id' AND cl_date = '$dateOfAttendance'") or die(mysqli_error($conn));
+            $isAttendanceAdded = mysqli_num_rows($fetchingStudentsAttendance);
+        
+            if ($isAttendanceAdded > 0) {
+                $studentAttendance = mysqli_fetch_array($fetchingStudentsAttendance);
+                $clin = $studentAttendance['time_in'];
+                $clout = $studentAttendance['time_out'];
+                $curr_date = $studentAttendance['cl_date'];
+                $clstat = $studentAttendance['attendance_status'];
+        
+                // Determine the attendance status
+                if (!empty($clin) && empty($clout)) {
+                    $morning_status = "C";
+                    $cuttingStudentCount++;
+                    $dailyCuttingTotal[$j]++; // Update daily total for Cutting
+                } else {
+                    $morning_status = ($clstat == "Present" ? "P" : ($clstat == "Late" ? "L" : "A"));
+                    if ($morning_status == "P") {
+                        $presentStudentCount++;
+                        $dailyPresentTotal[$j]++; // Update daily total for Present
+                    } elseif ($morning_status == "A") {
+                        $absentStudentCount++;
+                        $dailyAbsentTotal[$j]++; // Update daily total for Absent
+                    } elseif ($morning_status == "L") {
+                        $lateStudentCount++;
+                        $dailyLateTotal[$j]++; // Update daily total for Late
+                    }
+                }
+        
+                echo "<td>$morning_status</td>";
+            } else {
+                // Render a placeholder for days with no attendance data
+                echo "<td></td>";
+            }
+        }
+        
+
+        // Display counts for the current student
+        echo "<td>$absentStudentCount</td>";
+        echo "<td>$presentStudentCount</td>";
+        echo "<td>$cuttingStudentCount</td>";
+        echo "<td>$lateStudentCount</td>";
+        echo "<td colspan='10'></td>";
+        echo "</tr>";
+    }
+    ?>
+
+    <tr>
+        <td colspan="2">Male | Total Per Day</td>
+        <?php
+        // Loop through each day of the month and display the totals
+        for ($j = 1; $j <= $totalDaysInMonth; $j++) {
+            
+            $currentDay = date('N', strtotime("$firstDayOfMonth + $j days"));
+            $dayFormatted = sprintf('%02d', $j);
+            if ($currentDay >= 6) {
+                // Skip Saturday and Sunday
+                continue;
+            }
+            
+            // Display total counts for the day
+            $totalForDay = $dailyPresentTotal[$j] + $dailyLateTotal[$j];
+            echo "<td>$totalForDay</td>";
+        }
+        ?>
+        <td colspan="14"></td>
+    </tr>
+<!-- Female Section -->
+        <?php
+    $n = 0; 
+    // Fetch female students next
+    $fetchingFemaleStudents = mysqli_query($conn, "SELECT * FROM new_students WHERE gender = 'Female' ORDER BY lname ASC") or die(mysqli_error($conn));
+
+    // Initialize arrays to hold daily totals
+    $dailyPresentTotal = array_fill(1, $totalDaysInMonth, 0);
+    $dailyAbsentTotal = array_fill(1, $totalDaysInMonth, 0);
+    $dailyCuttingTotal = array_fill(1, $totalDaysInMonth, 0);
+    $dailyLateTotal = array_fill(1, $totalDaysInMonth, 0);
+
+    // Loop through female students
+    $n = 0;
+
+    // Loop through male students
+    while ($student = mysqli_fetch_array($fetchingFemaleStudents)) {
+        $student_id = $student['student_id'];
+        $sname = $student['fname'] . ' ' . $student['lname'];
+
+        // Initialize counts for each student
+        $absentStudentCount = 0;
+        $presentStudentCount = 0;
+        $cuttingStudentCount = 0;
+        $lateStudentCount = 0;
+
+        $n++;
+        
+        echo "<tr>";
+        echo "<td>$n</td>";
+        echo "<td>$sname</td>";
+
+        for ($j = 1; $j <= $totalDaysInMonth; $j++) {
+            $currentDay = date('N', strtotime("$firstDayOfMonth + $j days"));
+            if ($currentDay >= 6) {
+                // Skip Saturday and Sunday
+                continue;
+            }
+            $dayFormatted = sprintf('%02d', $j);
+            $dateOfAttendance = date("Y-m-$dayFormatted", strtotime("$firstDayOfMonth + $j days"));
+
+            $fetchingStudentsAttendance = mysqli_query($conn, "SELECT * FROM attendance_class WHERE student_id = '$student_id' AND cl_date = '$dateOfAttendance'") or die(mysqli_error($conn));
+            $isAttendanceAdded = mysqli_num_rows($fetchingStudentsAttendance);
+
+            if ($isAttendanceAdded > 0) {
+                $studentAttendance = mysqli_fetch_assoc($fetchingStudentsAttendance);
+                $clin = $studentAttendance['time_in'];
+                $clout = $studentAttendance['time_out'];
+                $curr_date = $studentAttendance['cl_date'];
+                $clstat = $studentAttendance['attendance_status'];
+
+                // For Attendance status
+                if (!empty($clin) && empty($clout)) {
+                    $morning_status = "C";
+                    $cuttingStudentCount++;
+                    $dailyCuttingTotal[$j]++; // Update daily total for Cutting
+                } else {
+                    $morning_status = ($clstat == "Present" ? "P" : ($clstat == "Late" ? "L" : "A"));
+                    if ($morning_status == "P") {
+                        $presentStudentCount++;
+                        $dailyPresentTotal[$j]++; // Update daily total for Present
+                    } elseif ($morning_status == "A") {
+                        $absentStudentCount++;
+                        $dailyAbsentTotal[$j]++; // Update daily total for Absent
+                    } elseif ($morning_status == "L") {
+                        $lateStudentCount++;
+                        $dailyLateTotal[$j]++; // Update daily total for Late
+                    }
+                }
+
+                echo "<td>$morning_status</td>";
+            } else {
+                // Debugging output for missing attendance
+                echo "Debug: No attendance record for Date = $dateOfAttendance<br>";
+                echo "<td></td>";
+            }
+        }
+
+        // Display counts for the current student
+        echo "<td>$absentStudentCount</td>";
+        echo "<td>$presentStudentCount</td>";
+        echo "<td>$cuttingStudentCount</td>";
+        echo "<td>$lateStudentCount</td>";
+        echo "<td colspan='10'></td>";
+        echo "</tr>";
+    }
+    ?>
+        <tr>
+        <td colspan="2">Female | Total Per Day</td>
+        <?php
+        // Loop through each day of the month and display the totals
+        for ($j = 1; $j <= $totalDaysInMonth; $j++) {
+            
+            $currentDay = date('N', strtotime("$firstDayOfMonth + $j days"));
+            $dayFormatted = sprintf('%02d', $j);
+            if ($currentDay >= 6) {
+                // Skip Saturday and Sunday
+                continue;
+            }
+            
+            // Display total counts for the day
+            $totalForDay = $dailyPresentTotal[$j] + $dailyLateTotal[$j];
+            echo "<td>$totalForDay</td>";
+        }
+        ?>
+        <td colspan="14"></td>
+    </tr>
+        <?php
+
+}
+
+
+// Fetching details only once for the first row
+
+$presentCount += $presentStudentCount;
+$absentCount += $absentStudentCount;
+$cuttingCount += $cuttingStudentCount;
+$cuttingCount += $lateStudentCount;
+?>
+                </table>
+                <br><br>
+                <div class="container">
+                    <!-- GUIDELINES Section -->
+                    <div class="guidelines">
+                        <h2>GUIDELINES:</h2>
+                        <table>
+                        <tr>
+                            <td colspan="5">1. The attendance shall be accomplished daily. Refer to the codes for checking learners' attendance.</td>
+                        </tr>
+                        <tr><td colspan="5">2. Dates shall be written in the columns after Learner's Name.</td></tr>
+                        <tr><td colspan="5">3. To compute the following:</td></tr>
+                        <tr>
+                            <td rowspan="2">a. Percentage of Enrolment = </td>
+                            <td style="border-bottom: 1px solid black;">Registered Learners as of end of the month</td>
+                            <td rowspan="2">X 100</td>
+                        </tr>
+                        <tr>
+                            <td>Enrolment as of 1st Friday of the school year</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2">b. Average Daily Attendance =</td>
+                            <td style="border-bottom: 1px solid black;">Total Daily Attendance</td>
+                        </tr>
+                        <tr>
+                            <td> Number of School Days in reporting month</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2">c. Percentage of Attendance for the month =  </td>
+                            <td style="border-bottom: 1px solid black;">Average daily attendance</td>
+                            <td rowspan="2">X 100</td>
+                        </tr>
+                        <tr>
+                            <td>Registered Learners as of end of the month</td>
+                        </tr>
+                            <tr><td colspan="3" style="word-wrap: break-word; white-space: normal;">4. Every end of the month, the class adviser will submit this form to the office of the principal for recording of summary table into School Form 4. Once signed by the principal, this form should be returned to the adviser.</td></tr>
+                            <tr><td colspan="3" style="word-wrap: break-word; white-space: normal;">5. The adviser will provide necessary interventions including but not limited to home visitation to learner/s who were absent for 5 consecutive days and/or those at risk of dropping out.</td></tr>
+                            <tr><td colspan="3" style="word-wrap: break-word; white-space: normal;">6. Attendance performance of learners will be reflected in Form 137 and Form 138 every grading period.</td></tr>
+                        </table>
+                    </div>
+
+                    <!-- CODES FOR CHECKING ATTENDANCE Section -->
+                    <div class="codes">
+                        <h2>1. CODES FOR CHECKING ATTENDANCE</h2>
+                        <ul>
+                            <li>(P) - Present; (A)- Absent; Tardy ( [L] - for Late Comer, [C] - for Cutting Classes)</li>
+                        </ul>
+                        <h2>2. REASONS/CAUSES FOR NLS</h2>
+                        <ul>
+                            <li><b>a. Domestic-Related Factors</b></li>
+                            <ul>
+                                <li>a.1. Had to take care of siblings</li>
+                                <li>a.2. Early marriage/pregnancy</li>
+                                <li>a.3. Parents' attitude toward schooling</li>
+                                <li>a.4. Family problems</li>
+                            </ul>
+                            <li><b>b. Individual-Related Factors</b></li>
+                            <ul>
+                                <li>b.1. Illness</li>
+                                <li>b.2. Overage</li>
+                                <li>b.3. Death</li>
+                                <li>b.4. Drug Abuse</li>
+                                <li>b.5. Poor academic performance</li>
+                                <li>b.6. Lack of interest/Distractions</li>
+                                <li>b.7. Hunger/Malnutrition</li>
+                            </ul>
+                            <li><b>c. School-Related Factors</b></li>
+                            <ul>
+                                <li>c.1. Teacher Factor</li>
+                                <li>c.2. Physical condition of classroom</li>
+                                <li>c.3. Peer influence</li>
+                            </ul>
+                            <li><b>d. Geographic/Environmental</b></li>
+                            <ul>
+                                <li>d.1. Distance between home and school</li>
+                                <li>d.2. Armed conflict (incl. Tribal wars & clan feuds)</li>
+                                <li>d.3. Calamities/Disasters</li>
+                            </ul>
+                            <li><b>e. Financial-Related</b></li>
+                            <ul>
+                                <li>e.1. Child labor, work</li>
+                            </ul>
+                            <li><b>f. Others (Specify)</b></li>
+                        </ul>
+                        
+                    </div>
+
+                    <!-- ATTENDANCE SUMMARY Section -->
+                    <div class="attendance-summary">
+                        <h2>Attendance Summary</h2>
+                        <table>
+                                <tr>
+                                    <td rowspan="2">Month: </td>
+                                    <td rowspan="2">No. of Days of Classes: </td>
+                                    <td colspan="3">Summary</td>
+                                </tr>
+                                <tr>
+                                    <td>M</td>
+                                    <td>F</td>
+                                    <td>Total</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">* Enrolment  as of (1st Friday of the SY)</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Late enrolment <strong><i>during the month</i></strong> (beyond cut-off)</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Registered Learners as of (end of month)</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Average Daily Attendance</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Percentage of Attendance for the month</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Number of students absent for 5 consecutive days</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" style="background:gray;width:100%;"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">NLS</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Transferred Out</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Transferred In</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Shifted Out</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Shifted In</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                               
+                        </table>
+                        <br>
+                        <div class="certification">
+                            I certify that this is a true and correct report.
+                        </div>
+                        <!-- Adviser or teacher signature area -->
+                        <br><br><br>
+                        <?php 
+                            // Fetch month name based on the month ID
+                            $fetchAdv = mysqli_query($conn, "SELECT tl.*, CONCAT(ti.t_fn,' ',ti.t_mn,' ',ti.t_ln) as advfn FROM teaching_load as tl LEFT JOIN teacher_info as ti ON tl.t_id = ti.t_id WHERE tl.id_tl = '$selectedTl'");
+                            $tlData = mysqli_fetch_assoc($fetchAdv);
+                            $tlFname = mb_strtoupper($tlData['advfn']);
+                        ?>
+                            <p class="facultyname"><?php echo $tlFname ? $tlFname : ''; ?></p>
+                        <div class="advisor-signature">
+                            <p>(Signature of Adviser over Printed Name)</p>
+                        </div>
+                        <br><br>
+                            <p>Attested by:</p><br>
+                            <p class="facultyname">ISRAEL ARQUILLANO PALERO</p>
+                            <div class="attested-by">
+                            <p>(Signature of School Head over Printed Name)</p>
+                            </div>
+                        <div class="generatelis">
+                            <p>Generated thru LIS</p>
+                            </div>
+                        
+                    </div>
+                    
+                </div>
+                <br>
+                </div>
+                </div>
+            </div>
+        </div>
+                    <?php 
+                }else{
+                    $firstDayOfMonth = date("Y-m-0");
+                    $totalDaysInMonth = date("t", strtotime($firstDayOfMonth));
+                    // Fetching Students 
+                    $fetchingStudents = mysqli_query($conn, "SELECT 
+                                        ag.student_id, CONCAT(ns.lname, ', ', ns.fname, ' ', ns.mname) AS full_name, 
+                                        CONCAT(adv.t_ln,', ',adv.t_fn,' ',adv.t_mn) AS advName,
+                                        gr.stud_grade AS grName, sc.section_name AS secName, sy.sy_name AS syName
+                                        FROM attendance_class AS ag
+                                        LEFT JOIN teaching_load AS tl ON ag.id_tl = tl.id_tl
+                                        LEFT JOIN teacher_info AS adv ON tl.adv_id = adv.t_id
+                                        LEFT JOIN teacher AS advId ON adv.t_id = advId.t_id
+                                        LEFT JOIN grade AS gr ON advId.grade = gr.grade_id
+                                        LEFT JOIN section AS sc ON advId.section = sc.section_id
+                                        LEFT JOIN new_students AS ns ON ag.student_id = ns.student_id
+                                        LEFT JOIN school_year AS sy ON ns.sy_enrolled = sy.sy_id
+                                        GROUP BY ag.student_id, full_name, advName, grName, secName, syName
+                                        ORDER BY full_name ASC") or die(mysqli_error($conn));
+                                        $totalNumberOfStudents = mysqli_num_rows($fetchingStudents);
+?>
+
+                <div class="scroll" style="overflow-x:auto;">
+            <div class="printable">
+                    
+
+                        <!-- JUNIOR HIGH SCHOOL INFORMATION HEADER -->
+
+                <table class="table-container" id="tbl_cont">
+                <tr>
+                    <td colspan="7"  style="text-align:center;border:none"><img src="../../images/admin/DepEd_circ.png" alt="" srcset="" height="100" width="100"></td>
+                    <td colspan="20" style="border:none;text-align:center"><h2>School Form 2 (SF2) Daily Attendance Report of Learners</h2></td>
+                    <td colspan="8" style="text-align:center;border:none"><img src="../../images/admin/DepEd_abbr.png" alt="" srcset="" height="100" width="100"></td>
+                </tr>
+                <tr>
+                <td><label for="">School Name</label></td>
+                    <td  colspan="6">
+                        <input type="text" name="schoolId" class="puts1" id="schoolId" value="Canipaan NHS" readonly>
+                    </td> 
+                    <td colspan="2" style="text-align:right;"><label for="sy">School ID</label></td>                   
+                    <td colspan="4">
+                        <input type="text" name="sy" class="puts1" id="sy" value="303446" readonly>
+                    </td>
+                    <td colspan="2"><label for="">District</label></td>                    
+                    <td colspan="5" >
+                        <input type="text" name="rfidcard" class="puts1" id="rfidcard" value="Hinunangan" readonly>
+                    </td>
+                    <td colspan="3"  style="text-align:right;"><label for="">Division</label></td>                    
+                    <td colspan="6" >
+                        <input type="text" name="rfidcard" class="puts1" id="rfidcard" value="Southern Leyte" readonly>
+                    </td>
+                    <td  style="text-align:right;"><label for="">Region</label></td>                    
+                    <td >
+                        <input type="text" name="rfidcard" class="puts1" id="rfidcard" value="VIII" readonly>
+                    </td>
+                </tr>
+                <tr>
+                    <td><label for="">School Year</label></td>
+                    <td colspan="5">
+                        <input type="text" name="sy" class="puts1" id="sy" value="<?php echo isset($syName) ? $syName : ''; ?>" readonly>
+                    </td>
+                    <td colspan="2" style="text-align:right"><label for="">Grade Level</label></td>
+                    <td colspan="7">
+                        <input type="text" name="gl" class="puts1" id="gl" value="<?php echo isset($grName) ? $grName : ''; ?>" readonly>
+                    </td>  
+                    <td colspan="3" style="text-align:right"><label for="">Section</label></td>
+                    <td colspan="10">
+                        <input type="text" name="sec" class="puts1" id="sec" value="<?php echo isset($secName) ? $secName : ''; ?>" readonly>
+                    </td>
+                    <td style="text-align:right"><label for="">Month of</label></td>
+                    <td colspan="8">
+                        <input type="text" name="mon" class="puts1" id="mon" value="<?php echo isset($selectedMonth) ? $selectedMonth : ''; ?>" readonly>
+                    </td>  
+                </tr>
+
+
+                <br>
+                <tr>
+                    <td rowspan="2">Students Names</td>
+                        <?php
+                        for ($j = 1; $j <= $totalDaysInMonth; $j++) {
+                            $currentDate = date('Y-m-d', strtotime("$firstDayOfMonth + $j days"));
+                            $dayOfWeek = date('N', strtotime($currentDate));
+                            if ($dayOfWeek >= 6) { // 6 corresponds to Saturday
+                                continue;
+                            }
+                            $day = date("D", strtotime($currentDate));
+                            echo "<td>$j</td>";
+                            // Add your logic here for displaying each day
+                        }
+                        ?>
+
+                    <td colspan="4">
+                        <h5>Total for the Month</h5>
+                    </td >
+                    <td rowspan="2" colspan="5" style="text-align:center">
+                    <p>REMARKS (If NLS, state reason,</p>
+                    <p>please refer to legend number 2.</p>
+                    <p>If TRANSFERRED IN/OUT, write the name of School.)</p>
+                    </td>
+                </tr>
+
+                    <tr>
+                        <?php
+                            for ($j = 1; $j <= $totalDaysInMonth; $j++) {
+                                $currentDate = date('Y-m-d', strtotime("$firstDayOfMonth + $j days"));
+                                $dayAbbreviated = date("D", strtotime($currentDate)); // Get abbreviated day name
+                                
+                                if (date('N', strtotime($currentDate)) >= 6) {
+                                    // Skip Saturday and Sunday
+                                    continue;
+                                }
+
+                                // Map abbreviated day names to the desired format
+                                switch ($dayAbbreviated) {
+                                    case 'Mon':
+                                        $dayAbbreviated = 'M';
+                                        break;
+                                    case 'Tue':
+                                        $dayAbbreviated = 'T';
+                                        break;
+                                    case 'Wed':
+                                        $dayAbbreviated = 'W';
+                                        break;
+                                    case 'Thu':
+                                        $dayAbbreviated = 'Th';
+                                        break;
+                                    case 'Fri':
+                                        $dayAbbreviated = 'F';
+                                        break;
+                                    default:
+                                        // Handle any other cases here
+                                        break;
+                                }
+                                
+                                echo "<td>$dayAbbreviated</td>";
+                            }
+
+                        ?>
+                    <td>A</td>
+                    <td>P</td>
+                    <td>C</td>
+                    <td>L</td>
+                    </tr>
+
+                </tr>
+                <?php
+                $absentCount = 0;
+                $presentCount = 0;
+                $cuttingCount = 0;
+                $lateCount = 0;
+                $absentStudentCount = 0;
+                $presentStudentCount = 0;
+                $cuttingStudentCount = 0;
+                $lateStudentCount = 0;
+                while ($student = mysqli_fetch_assoc($fetchingStudents)) {
+                    $student_id = $student['student_id'];
+                    $sname = $student['full_name'];
+                    echo "<tr>";
+                    echo "<td >$sname</td>";
+                    
+                    for ($j = 1; $j <= $totalDaysInMonth; $j++) {
+                        $currentDay = date('N', strtotime("$firstDayOfMonth + $j days"));
+                        if ($currentDay >= 6) {
+                            // Skip Saturday and Sunday
+                            continue;
+                        }
+                        $dayFormatted = sprintf('%02d', $j);
+                        $dateOfAttendance = date("Y-m-$dayFormatted", strtotime("$firstDayOfMonth + $j days"));
+                        $fetchingStudentsAttendance = mysqli_query($conn, "SELECT * FROM attendance_class WHERE student_id = '$student_id' AND cl_date = '$dateOfAttendance'") or die(mysqli_error($conn));
+
+                        $isAttendanceAdded = mysqli_num_rows($fetchingStudentsAttendance);
+                        $dashLog = "-";
+                        if ($isAttendanceAdded > 0) {
+                            $studentAttendance = mysqli_fetch_assoc($fetchingStudentsAttendance);
+                            $clin = $studentAttendance['time_in'];
+                            $clout = $studentAttendance['time_out'];
+                            $curr_date = $studentAttendance['cl_date'];
+                            $clstat = $studentAttendance['attendance_status'];
+
+                            // For morning status
+                            if (!empty($clin) && empty($clout)){
+                                $morning_status = "C";
+                                $cuttingStudentCount++;
+                            }else{
+                                $morning_status = ($clstat == "Present" ? "P" : ($clstat == "Late" ? "L" : "A"));
+                                if ($morning_status == "P") {
+                                    $presentStudentCount++;
+                                } elseif ($morning_status == "A") {
+                                    $absentStudentCount++;
+                                }elseif ($morning_status == "L") {
+                                    $lateStudentCount++;
+                                }
+                
+                            }
+                            
+                            
+                            echo "<td>$morning_status</td>";
+                        } else {
+                            echo "<td></td>";
+                        }
+
+                    }
+                    echo "<td>$absentStudentCount</td>";
+                    echo "<td>$presentStudentCount</td>";
+                    echo "<td>$cuttingStudentCount</td>";
+                    echo "<td>$lateStudentCount</td>";
+                    echo "<td colspan='5'></td>";
+                }
+
+                $presentCount += $presentStudentCount;
+                $absentCount += $absentStudentCount;
+                $cuttingCount += $cuttingStudentCount;
+                $cuttingCount += $lateStudentCount;
+                ?>
+                </tr>
+                </table>
+                <br><br>
+                <div class="container">
+                    <!-- GUIDELINES Section -->
+                    <div class="guidelines">
+                        <h2>GUIDELINES:</h2>
+                        <table>
+                        <tr>
+                            <td colspan="5">1. The attendance shall be accomplished daily. Refer to the codes for checking learners' attendance.</td>
+                        </tr>
+                        <tr><td colspan="5">2. Dates shall be written in the columns after Learner's Name.</td></tr>
+                        <tr><td colspan="5">3. To compute the following:</td></tr>
+                        <tr>
+                            <td rowspan="2">a. Percentage of Enrolment = </td>
+                            <td style="border-bottom: 1px solid black;">Registered Learners as of end of the month</td>
+                            <td rowspan="2">X 100</td>
+                        </tr>
+                        <tr>
+                            <td>Enrolment as of 1st Friday of the school year</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2">b. Average Daily Attendance =</td>
+                            <td style="border-bottom: 1px solid black;">Total Daily Attendance</td>
+                        </tr>
+                        <tr>
+                            <td> Number of School Days in reporting month</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="2">c. Percentage of Attendance for the month =  </td>
+                            <td style="border-bottom: 1px solid black;">Average daily attendance</td>
+                            <td rowspan="2">X 100</td>
+                        </tr>
+                        <tr>
+                            <td>Registered Learners as of end of the month</td>
+                        </tr>
+                            <tr><td colspan="3" style="word-wrap: break-word; white-space: normal;">4. Every end of the month, the class adviser will submit this form to the office of the principal for recording of summary table into School Form 4. Once signed by the principal, this form should be returned to the adviser.</td></tr>
+                            <tr><td colspan="3" style="word-wrap: break-word; white-space: normal;">5. The adviser will provide necessary interventions including but not limited to home visitation to learner/s who were absent for 5 consecutive days and/or those at risk of dropping out.</td></tr>
+                            <tr><td colspan="3" style="word-wrap: break-word; white-space: normal;">6. Attendance performance of learners will be reflected in Form 137 and Form 138 every grading period.</td></tr>
+                        </table>
+
+                    </div>
+                    <!-- CODES FOR CHECKING ATTENDANCE Section -->
+                    <div class="codes">
+                        <h2>1. CODES FOR CHECKING ATTENDANCE</h2>
+                        <ul>
+                            <li>(P) - Present; (A)- Absent; Tardy ( [L] = Upper for Late Comer, [C] for Cutting Classes)</li>
+                        </ul>
+                        <h2>2. REASONS/CAUSES FOR NLS</h2>
+                        <ul>
+                            <li><b>a. Domestic-Related Factors</b></li>
+                            <ul>
+                                <li>a.1. Had to take care of siblings</li>
+                                <li>a.2. Early marriage/pregnancy</li>
+                                <li>a.3. Parents' attitude toward schooling</li>
+                                <li>a.4. Family problems</li>
+                            </ul>
+                            <li><b>b. Individual-Related Factors</b></li>
+                            <ul>
+                                <li>b.1. Illness</li>
+                                <li>b.2. Overage</li>
+                                <li>b.3. Death</li>
+                                <li>b.4. Drug Abuse</li>
+                                <li>b.5. Poor academic performance</li>
+                                <li>b.6. Lack of interest/Distractions</li>
+                                <li>b.7. Hunger/Malnutrition</li>
+                            </ul>
+                            <li><b>c. School-Related Factors</b></li>
+                            <ul>
+                                <li>c.1. Teacher Factor</li>
+                                <li>c.2. Physical condition of classroom</li>
+                                <li>c.3. Peer influence</li>
+                            </ul>
+                            <li><b>d. Geographic/Environmental</b></li>
+                            <ul>
+                                <li>d.1. Distance between home and school</li>
+                                <li>d.2. Armed conflict (incl. Tribal wars & clan feuds)</li>
+                                <li>d.3. Calamities/Disasters</li>
+                            </ul>
+                            <li><b>e. Financial-Related</b></li>
+                            <ul>
+                                <li>e.1. Child labor, work</li>
+                            </ul>
+                            <li><b>f. Others (Specify)</b></li>
+                        </ul>
+
+                            <div class="generatelis">
+                            <p>Generated thru LIS</p>
+                            </div>
+                    </div>
+
+                    <!-- ATTENDANCE SUMMARY Section -->
+                    <div class="attendance-summary">
+                        <h2>Attendance Summary</h2>
+                        <table>
+                                <tr>
+                                    <td rowspan="2">Month: </td>
+                                    <td rowspan="2">No. of Days of Classes: </td>
+                                    <td colspan="3">Summary</td>
+                                </tr>
+                                <tr>
+                                    <td>M</td>
+                                    <td>F</td>
+                                    <td>Total</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">* Enrolment  as of (1st Friday of the SY)</td>
+                                    <td>17</td>
+                                    <td>13</td>
+                                    <td>13</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Late enrolment <strong><i>during the month</i></strong> (beyond cut-off)</td>
+                                    <td>17</td>
+                                    <td>13</td>
+                                    <td>13</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Registered Learners as of (end of month)</td>
+                                    <td>17</td>
+                                    <td>13</td>
+                                    <td>13</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Average Daily Attendance</td>
+                                    <td>17</td>
+                                    <td>13</td>
+                                    <td>13</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Percentage of Attendance for the month</td>
+                                    <td>17</td>
+                                    <td>13</td>
+                                    <td>13</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Number of students absent for 5 consecutive days</td>
+                                    <td>17</td>
+                                    <td>13</td>
+                                    <td>13</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" style="background-color: gray;"></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">NLS</td>
+                                    <td>17</td>
+                                    <td>13</td>
+                                    <td>13</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Transferred Out</td>
+                                    <td>17</td>
+                                    <td>13</td>
+                                    <td>13</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Transferred In</td>
+                                    <td>17</td>
+                                    <td>13</td>
+                                    <td>13</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Shifted Out</td>
+                                    <td>17</td>
+                                    <td>13</td>
+                                    <td>13</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">Shifted In</td>
+                                    <td>17</td>
+                                    <td>13</td>
+                                    <td>13</td>
+                                </tr>
+                               
+                        </table>
+                        <div class="certification">
+                            I certify that this is a true and correct report.
+                        </div>
+                        <br><br>
+                            <p class="facultyname">Teacher Name</p>
+                        <div class="advisor-signature">
+                            <p>(Signature of Adviser over Printed Name)</p>
+                        </div>
+                        <br><br>
+                            <p>Attested by:</p><br>
+                            <p class="facultyname">ISRAEL ARQUILLANO PALERO</p>
+                            <div class="attested-by">
+                            <p>(Signature of School Head over Printed Name)</p>
+                            </div>
+                        
+                    </div>
+                    
+                </div>
+                <br>
+                </div>
+                </div>
+                </div>
+            </div>
+        </div>
+        <?php
+
+                }
+
+                ?>
+    </section>
+
+    <script>
+            // JavaScript code to handle printing
+    function print_div() {
+        // Hide elements not to be printed
+        document.querySelector("button").style.display = "none";
+
+        // Get the HTML content of the table-container
+        var divContent = document.querySelector(".printable").outerHTML;
+
+        // Open a new window
+        var printWindow = window.open('', '', 'width=1000,height=600');
+
+        // Set the HTML content of the new window to the div content
+        printWindow.document.write('<html><head>');
+        printWindow.document.write('<style>@media print {');
+        printWindow.document.write('body { font-size: 9px; }');
+        printWindow.document.write('table  { border-collapse: collapse; margin: auto; width: 100%; }');
+        printWindow.document.write('td { border: 2px solid black; width: 100%; white-space: nowrap; padding: 5px; }');
+        printWindow.document.write('img { margin: 10px 0; }');
+        printWindow.document.write('.container { display: grid; grid-template-columns: 2fr 2fr 2fr; gap: 10px; padding: 20px; }');
+        printWindow.document.write('.puts1 { text-align: left; outline: none; border:none; padding: 3px; width: 100%; }');
+        printWindow.document.write('.guidelines h2, .codes h2, .attendance-summary h2 { text-align: left; font-size: 12px; margin-bottom: 10px; }');
+        printWindow.document.write('.codes ul{list-style: none; padding-left: 10px; width:200px }');
+        printWindow.document.write('.tdempty{background-color:gray;width:100%}');
+        printWindow.document.write('.codes ul li { margin-bottom: 5px; }');
+        printWindow.document.write('.attendance-summary table { border-collapse: collapse;  border: 1px solid black; padding: 5px; }');
+        printWindow.document.write('.attendance-summary th, .attendance-summary td { text-align: center; }');
+        printWindow.document.write('.attendance-summary td { text-align: left; }');
+        printWindow.document.write('.guidelines th, .guidelines td { border:none; padding: 5px; text-align: left; }');
+        printWindow.document.write('.generatelis { margin-top: 100px; border-top: 1px solid black; padding-top: 10px; text-align: center; }');
+        printWindow.document.write('.guidelines { grid-column: 1 / 2; grid-row: 1 / 4; }');
+        printWindow.document.write('.codes { grid-column: 2 / 3; grid-row: 1 / 2; border: 1px solid black}');
+        printWindow.document.write('.attendance-summary { grid-column: 3 / 4; grid-row: 1 / 4; }');
+        printWindow.document.write('.certification { margin-top: 20px; text-align: left; font: italic bold 12px Georgia, serif; color:red; }');
+        printWindow.document.write('.advisor-signature { margin: 0 10px; border-top: 1px solid black; padding-top: 10px; text-align: center; }');
+        printWindow.document.write('.facultyname { text-align: center; width: auto; }');
+        printWindow.document.write('.attested-by { margin-top: 10px; border-top: 1px solid black; padding-top: 10px; text-align: center; }');
+
+
+
+
+        printWindow.document.write('}</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(divContent);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.print();
+
+
+        // Show the hidden elements
+        document.querySelector("button").style.display = "block";
+    }
+    </script>
+ 
+    <?php
+    include "footer.php";
+    ?>
+</body>
+
+</html>

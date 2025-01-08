@@ -1,0 +1,85 @@
+.puts1 {
+    text-align: left;
+    border-radius: 4px;
+    outline: none;
+    padding: 3px;
+    width: 100%; /* Set width to 100% */
+    font-size: 10px;
+    border: none;
+}
+labels {
+    text-align: right;
+    font-size: 7px;
+    padding: 2px;
+}
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    background-color: #2196F3;
+    padding: 10px;
+    gap: 10px;
+}
+.grid-item {
+    background-color: white;
+    padding: 20px;
+    font-size: 16px; /* Adjust font size as needed */
+    text-align: left;
+    width: 100%;
+}
+.tbl_guidelines {
+    table-layout: auto;
+    border-collapse: collapse;
+    margin-top: 20px;
+    width: 100%; /* Ensure the table takes full width */
+}
+.container {
+    display: grid;
+    grid-template-columns: 2fr 2fr 2fr;
+    gap: 10px;
+    padding: 20px;
+}
+.guidelines { grid-column: 1 / 2; grid-row: 1 / 4; }
+.codes { grid-column: 2 / 3; grid-row: 1 / 8; }
+.attendance-summary { grid-column: 3 / 4; grid-row: 1 / 4; }
+
+.guidelines, .codes, .attendance-summary {
+    padding: 10px;
+    font-size: 10px;
+    /* No height specified; content will determine the height */
+}
+
+    .guidelines h2, .codes h2, .attendance-summary h2 {
+        text-align: left;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+    .codes ul, .guidelines ul {
+        list-style: none;
+        padding-left: 0;
+    }
+    .codes ul li, .guidelines ul li {
+        margin-bottom: 5px;
+    }
+    .attendance-summary table, .guidelines table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .attendance-summary th, .attendance-summary td {
+        border: 1px solid black;
+        padding: 5px;
+        text-align: center;
+    }
+     .guidelines th, .guidelines td  {
+        padding: 5px;
+        text-align: left;
+    }
+    .certification {
+        margin: 30px 0 30px 0;
+        text-align: left;
+        font-weight: bold;
+    }
+    
+    .advisor-signature { margin: 0 30px; border-top: 1px solid black; padding-top: 10px;text-align: center; }
+    .facultyname{text-align: center; width:auto;}
+    .attested-by { margin-top: 10px; border-top: 1px solid black; padding-top: 10px; text-align: center;}
+    .generatelis { margin-top: 100px; border-top: 1px solid black; padding-top: 10px; text-align: left;}
